@@ -13,6 +13,7 @@ const PORT = process.env.PORT || 3000;
 // ✅ Replace this with your real, unencoded password
 const MONGO_URI = 'mongodb+srv://nipunv111:bW9uZ28xMjM=@cluster0.gj9ebnd.mongodb.net/reviewDB?retryWrites=true&w=majority&ssl=true';
 
+
 let collection;
 
 // ✅ Connect to MongoDB
