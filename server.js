@@ -11,7 +11,7 @@ app.use(express.static(path.join(__dirname, 'public'))); // Serve index.html
 const PORT = process.env.PORT || 3000;
 
 // ✅ Replace this with your real, unencoded password
-const MONGO_URI = 'mongodb+srv://nipunv111:mongo123@cluster0.gj9ebnd.mongodb.net/reviewDB?retryWrites=true&w=majority'
+const MONGO_URI = 'mongodb+srv://nipunv111:<mongo123>@cluster0.gj9ebnd.mongodb.net/reviewDB?retryWrites=true&w=majority&ssl=true';
 
 let collection;
 
