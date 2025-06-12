@@ -13,6 +13,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 const PORT = process.env.PORT || 3000;
 
 // ✅ FIXED: Properly decoded MongoDB URI
+;
 const MONGO_URI = 'mongodb+srv://nipunv111:mongo123@cluster0.gj9ebnd.mongodb.net/reviewDB?retryWrites=true&w=majority&ssl=true';
 
 let db, collection;
