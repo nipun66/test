@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Review Form</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+      max-width: 600px;
+      margin: auto;
+    }
+    .stars {
+      display: flex;
+      gap: 5px;
+      cursor: pointer;
+      font-size: 2rem;
+    }
+    .star {
+      color: lightgray;
+    }
+    .star.selected {
+      color: gold;
+    }
+  </style>
+</head>
+<body>
+  <h2>Leave Your Review</h2>
+
+  <form id="reviewForm">
+    <label for="review">Your Review:</label><br>
+    <textarea id="review" name="review" rows="4" cols="50" required></textarea><br><br>
+
+    <label>Your Rating:</label>
+    <div class="stars" id="stars">
+      <span class="star" data-value="1">&#9733;</span>
+      <span class="star" data-value="2">&#9733;</span>
+      <span class="star" data-value="3">&#9733;</span>
+      <span class="star" data-value="4">&#9733;</span>
+      <span class="star" data-value="5">&#9733;</span>
+    </div><br>
+
+    <input type="hidden" name="rating" id="rating" required />
+    <input type="hidden" name="userId" id="userId" value="unknown" />
+
+    <button type="submit">Submit Review</button>
+  </form>
+
+  <script>
+    // 1. Fill userId from URL
+    const params = new URLSearchParams(window.location.search);
+    const uid = params.get('userId');
+    if (uid) {
+      document.getElementById('userId').value = uid;
+    }
+
+    // 2. Star rating logic
+    const stars = document.querySelectorAll('.star');
+    const ratingInput = document.getElementById('rating');
+
+    stars.forEach(star => {
+      star.addEventListener('click', () => {
+        const value = parseInt(star.getAttribute('data-value'));
+        ratingInput.value = value;
+
+        stars.forEach(s => s.classList.remove('selected'));
+        for (let i = 0; i < value; i++) {
+          stars[i].classList.add('selected');
+        }
+      });
+    });
+
+    // 3. Form submission logic
+    document.getElementById('reviewForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        userId: form.userId.value,
+        review: form.review.value,
+        rating: parseInt(form.rating.value),
+      };
+
+      const res = await fetch('http://localhost:3000/submit-review', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+
+      if (res.ok) {
+        alert('Review submitted!');
+        form.reset();
+        stars.forEach(s => s.classList.remove('selected'));
+      } else {
+        alert('Failed to submit review.');
+      }
+    });
+  </script>
+</body>
+</html>

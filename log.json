@@ -1,0 +1,26 @@
+[
+  {
+    "userId": "abc123",
+    "review": "hheeyy , love this app",
+    "rating": 4,
+    "timestamp": "2025-06-12T05:02:01.681Z"
+  },
+  {
+    "userId": "abc123",
+    "review": "cool app!!",
+    "rating": 5,
+    "timestamp": "2025-06-12T05:04:12.543Z"
+  },
+  {
+    "userId": "unknown",
+    "review": "hheeyy the app was great to usee~!!1",
+    "rating": 5,
+    "timestamp": "2025-06-12T05:10:00.736Z"
+  },
+  {
+    "userId": "unknown",
+    "review": "hey",
+    "rating": 5,
+    "timestamp": "12/6/2025, 10:41:36 am"
+  }
+]
