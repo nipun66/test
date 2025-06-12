@@ -1,97 +1,96 @@
 const express = require('express');
-const fs = require('fs');
 const cors = require('cors');
-const path = require('path');
+const { MongoClient } = require('mongodb');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
-app.use(express.static("public"))
-
-const LOG_FILE = path.join(__dirname, 'log.json');
-
-app.post('/submit-review', (req, res) => {
-  const { userId, review, rating } = req.body;
-  if (!userId || !review || !rating) {
-    return res.status(400).json({ error: 'Missing fields' });
-  }
-
-  const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-  const entry = { userId, review, rating, timestamp };
-  const data = fs.existsSync(LOG_FILE) ? JSON.parse(fs.readFileSync(LOG_FILE)) : [];
-  data.push(entry);
-  fs.writeFileSync(LOG_FILE, JSON.stringify(data, null, 2));
-
-  res.json({ status: 'success' });
-});
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+
+// TODO: Replace with your actual URI from MongoDB Atlas
+const MONGO_URI = 'mongodb+srv://nipunv111:mongo123@cluster0.gj9ebnd.mongodb.net/?retryWrites=true&w=majority'
+
+let db, collection;
+
+async function connectDB() {
+  const client = new MongoClient(MONGO_URI);
+  await client.connect();
+  db = client.db('reviewDB'); // or your DB name from Compass
+  collection = db.collection('reviews');
+  console.log('✅ Connected to MongoDB');
+}
+
+connectDB().catch(console.error);
+
+app.post('/submit-review', async (req, res) => {
+  try {
+    const { userId, review, rating } = req.body;
+    if (!userId || !review || !rating) return res.status(400).json({ error: 'Missing fields' });
+
+    const entry = {
+      userId,
+      review,
+      rating,
+      timestamp: new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })
+    };
+
+    await collection.insertOne(entry);
+    res.json({ status: 'success', message: 'Review saved' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to save review' });
+  }
 });
 
+// basic health route
+app.get('/', (req, res) => res.send('Server is running'));
 
-app.get('/reviews', (req, res) => {
-  if (!fs.existsSync(LOG_FILE)) return res.send('<h3>No reviews yet.</h3>');
-
+// show reviews in HTML dashboard (optional upgrade)
+app.get('/reviews', async (req, res) => {
   try {
-    const raw = fs.readFileSync(LOG_FILE, 'utf-8');
-    let reviews = raw ? JSON.parse(raw) : [];
-
     const { stars, limit } = req.query;
+    let query = {};
+    if (stars) query.rating = parseInt(stars);
+    const options = limit ? { limit: parseInt(limit) } : {};
 
-    // ⭐ Filter by rating if ?stars=5
-    if (stars) {
-      reviews = reviews.filter(r => r.rating === parseInt(stars));
-    }
+    const reviews = await collection.find(query, options).toArray();
+    const total = reviews.length;
+    const avgRating = total ? (reviews.reduce((sum, r) => sum + r.rating, 0) / total).toFixed(2) : 0;
 
-    // 🔢 Limit to first N
-    if (limit) {
-      reviews = reviews.slice(0, parseInt(limit));
-    }
-
-    const tableRows = reviews.map(r => `
+    const rows = reviews.map(r => `
       <tr>
         <td>${r.userId}</td>
-        <td>${r.rating}</td>
+        <td>${'⭐️'.repeat(r.rating)}</td>
         <td>${r.review}</td>
         <td>${r.timestamp}</td>
       </tr>
     `).join('');
 
-    const html = `
-      <html>
-      <head>
-        <title>Filtered Reviews</title>
-        <style>
-          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-          th { background: #f0f0f0; }
-          body { font-family: sans-serif; padding: 40px; }
-        </style>
-      </head>
-      <body>
-        <h2>Filtered Reviews (${reviews.length} found)</h2>
+    res.send(`
+      <html><head><style>
+        body { font-family: sans-serif; padding: 20px; }
+        .summary { margin-bottom: 20px; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { padding: 10px; border: 1px solid #ccc; }
+        th { background: #f0f0f0; }
+      </style></head><body>
+        <h2>📊 Review Dashboard</h2>
+        <div class="summary">
+          <strong>Total Reviews:</strong> ${total}<br/>
+          <strong>Average Rating:</strong> ${avgRating} ⭐
+        </div>
         <table>
-          <thead>
-            <tr>
-              <th>User ID</th>
-              <th>Rating</th>
-              <th>Review</th>
-              <th>Timestamp</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableRows}
-          </tbody>
+          <tr><th>User ID</th><th>Rating</th><th>Review</th><th>Timestamp</th></tr>
+          ${rows}
         </table>
-      </body>
-      </html>
-    `;
-
-    res.send(html);
-
+      </body></html>
+    `);
   } catch (err) {
-    res.status(500).send('<h3>Error reading reviews.</h3>');
+    res.status(500).send('Error fetching reviews');
   }
+});
+
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
