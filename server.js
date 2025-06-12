@@ -29,3 +29,18 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
+
+
+app.get('/reviews', (req, res) => {
+  if (!fs.existsSync(LOG_FILE)) {
+    return res.json([]);
+  }
+
+  try {
+    const data = fs.readFileSync(LOG_FILE, 'utf-8');
+    const reviews = data ? JSON.parse(data) : [];
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to read reviews' });
+  }
+});

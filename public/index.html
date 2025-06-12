@@ -81,7 +81,7 @@
         rating: parseInt(form.rating.value),
       };
 
-      const res = await fetch('http://localhost:3000/submit-review', {
+      const res = await fetch('https://test-c2tj.onrender.com/submit-review', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
