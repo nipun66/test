@@ -9,8 +9,7 @@ app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // TODO: Replace with your actual URI from MongoDB Atlas
-const MONGO_URI = 'mongodb+srv://nipunv111:mongo123@cluster0.gj9ebnd.mongodb.net/?retryWrites=true&w=majority'
-
+const MONGO_URI = 'mongodb%2Bsrv%3A%2F%2Fnipunv111%3Amongo123%40cluster0.gj9ebnd.mongodb.net%2F%3FretryWrites%3Dtrue%26w%3Dmajority%27%0A'
 let db, collection;
 
 async function connectDB() {
