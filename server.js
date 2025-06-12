@@ -32,15 +32,67 @@ app.listen(PORT, () => {
 
 
 app.get('/reviews', (req, res) => {
-  if (!fs.existsSync(LOG_FILE)) {
-    return res.json([]);
-  }
+  if (!fs.existsSync(LOG_FILE)) return res.send('<h3>No reviews yet.</h3>');
 
   try {
-    const data = fs.readFileSync(LOG_FILE, 'utf-8');
-    const reviews = data ? JSON.parse(data) : [];
-    res.json(reviews);
+    const raw = fs.readFileSync(LOG_FILE, 'utf-8');
+    const reviews = raw ? JSON.parse(raw) : [];
+
+    const tableRows = reviews.map(r => `
+      <tr>
+        <td>${r.userId}</td>
+        <td>${r.rating}</td>
+        <td>${r.review}</td>
+        <td>${r.timestamp}</td>
+      </tr>
+    `).join('');
+
+    const html = `
+      <html>
+      <head>
+        <title>All Reviews</title>
+        <style>
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+          }
+          th {
+            background: #f0f0f0;
+          }
+          body {
+            font-family: sans-serif;
+            padding: 40px;
+          }
+        </style>
+      </head>
+      <body>
+        <h2>Submitted Reviews</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>User ID</th>
+              <th>Rating</th>
+              <th>Review</th>
+              <th>Timestamp</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRows}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+
+    res.send(html);
+
   } catch (err) {
-    res.status(500).json({ error: 'Failed to read reviews' });
+    res.status(500).send('<h3>Failed to load reviews.</h3>');
   }
 });
