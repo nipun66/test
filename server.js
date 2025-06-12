@@ -36,7 +36,19 @@ app.get('/reviews', (req, res) => {
 
   try {
     const raw = fs.readFileSync(LOG_FILE, 'utf-8');
-    const reviews = raw ? JSON.parse(raw) : [];
+    let reviews = raw ? JSON.parse(raw) : [];
+
+    const { stars, limit } = req.query;
+
+    // ⭐ Filter by rating if ?stars=5
+    if (stars) {
+      reviews = reviews.filter(r => r.rating === parseInt(stars));
+    }
+
+    // 🔢 Limit to first N
+    if (limit) {
+      reviews = reviews.slice(0, parseInt(limit));
+    }
 
     const tableRows = reviews.map(r => `
       <tr>
@@ -50,29 +62,16 @@ app.get('/reviews', (req, res) => {
     const html = `
       <html>
       <head>
-        <title>All Reviews</title>
+        <title>Filtered Reviews</title>
         <style>
-          table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-          }
-          th, td {
-            border: 1px solid #ccc;
-            padding: 8px;
-            text-align: left;
-          }
-          th {
-            background: #f0f0f0;
-          }
-          body {
-            font-family: sans-serif;
-            padding: 40px;
-          }
+          table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+          th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+          th { background: #f0f0f0; }
+          body { font-family: sans-serif; padding: 40px; }
         </style>
       </head>
       <body>
-        <h2>Submitted Reviews</h2>
+        <h2>Filtered Reviews (${reviews.length} found)</h2>
         <table>
           <thead>
             <tr>
@@ -93,6 +92,6 @@ app.get('/reviews', (req, res) => {
     res.send(html);
 
   } catch (err) {
-    res.status(500).send('<h3>Failed to load reviews.</h3>');
+    res.status(500).send('<h3>Error reading reviews.</h3>');
   }
 });
