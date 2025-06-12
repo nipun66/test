@@ -1,27 +1,33 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const { MongoClient } = require('mongodb');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ✅ Serve static frontend from /public
+app.use(express.static(path.join(__dirname, 'public')));
+
 const PORT = process.env.PORT || 3000;
 
-// TODO: Replace with your actual URI from MongoDB Atlas
-const MONGO_URI = 'mongodb%2Bsrv%3A%2F%2Fnipunv111%3Amongo123%40cluster0.gj9ebnd.mongodb.net%2F%3FretryWrites%3Dtrue%26w%3Dmajority%27%0A'
+// ✅ FIXED: Properly decoded MongoDB URI
+const MONGO_URI = 'mongodb+srv://nipunv111:mongo123@cluster0.gj9ebnd.mongodb.net/reviewDB?retryWrites=true&w=majority&ssl=true';
+
 let db, collection;
 
 async function connectDB() {
   const client = new MongoClient(MONGO_URI);
   await client.connect();
-  db = client.db('reviewDB'); // or your DB name from Compass
+  db = client.db('reviewDB');
   collection = db.collection('reviews');
   console.log('✅ Connected to MongoDB');
 }
 
 connectDB().catch(console.error);
 
+// ✅ Form submission API
 app.post('/submit-review', async (req, res) => {
   try {
     const { userId, review, rating } = req.body;
@@ -42,10 +48,7 @@ app.post('/submit-review', async (req, res) => {
   }
 });
 
-// basic health route
-app.get('/', (req, res) => res.send('Server is running'));
-
-// show reviews in HTML dashboard (optional upgrade)
+// ✅ Enhanced dashboard at /reviews
 app.get('/reviews', async (req, res) => {
   try {
     const { stars, limit } = req.query;
@@ -89,6 +92,9 @@ app.get('/reviews', async (req, res) => {
     res.status(500).send('Error fetching reviews');
   }
 });
+
+// ✅ Health check
+app.get('/', (req, res) => res.send('Server is running'));
 
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
